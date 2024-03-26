@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Next from "./Next";
 import Score from "./Score";
 import shapes from './shapes'
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { increaseScore } from "../features/scoreSlice";
 
 export default function Board() {
@@ -18,6 +18,8 @@ export default function Board() {
     const [rotate, setRotate] = useState(0)
     const [isGameOver, setIsGameOver] = useState(false)
     const dispatch = useDispatch()
+    const level = useSelector(state => state.level.value)
+    
     const clearSound = new Audio('./clear.wav');
 
     function rotatePiece() {
@@ -108,9 +110,10 @@ export default function Board() {
     
 
     useEffect(() => {
+        let speed = (level === 1) ? 700 : (level === 2) ? 400 : (level === 3) ? 100 : 400
         const interval = setInterval(() => {
             movePiece(0, 1);
-        }, 700);
+        }, speed);
 
         return () => clearInterval(interval);
     }, [piecePosition, currentPieceType, board]);
