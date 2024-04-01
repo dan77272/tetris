@@ -11,12 +11,13 @@ export default function Board() {
 
     const pieces = ['I', 'L', 'J', 'O', 'S', 'Z', 'T'];
     const pieceColours = {'I': '#00f0f0', 'L': '#0000f0', 'J': '#f0a000', 'O': '#f0f000', 'S': '#00f000', 'Z': '#a000f0', 'T': '#f00000'}
-    const [currentPieceType, setCurrentPieceType] = useState(() => pieces[Math.floor(Math.random() * pieces.length)]);
+    
+    const [currentPieceType, setCurrentPieceType] = useState(() => Array.from({length: 4}, () => pieces[Math.floor(Math.random() * pieces.length)]));
     const [piecePosition, setPiecePosition] = useState({ x: Math.floor(COLUMNS / 2) - 2, y: 0 }); // Start from the top middle
     const [board, setBoard] = useState(() => Array.from({ length: ROWS }, () => Array(COLUMNS).fill(0)));
-
     const [rotate, setRotate] = useState(0)
     const [isGameOver, setIsGameOver] = useState(false)
+    
     const dispatch = useDispatch()
     const level = useSelector(state => state.level.value)
     
@@ -24,7 +25,7 @@ export default function Board() {
 
     function rotatePiece() {
         let newRotate = (rotate + 1) % 4;
-        let newShape = shapes[currentPieceType][newRotate];
+        let newShape = shapes[currentPieceType[0]][newRotate];
         let offset = 0;
     
         // Check if the new shape will be out of bounds and calculate the necessary offset
@@ -42,12 +43,12 @@ export default function Board() {
         // Apply the offset if needed to keep the piece within the board
         if (offset > 0) {
             const newX = piecePosition.x - offset;
-            if (!checkCollision(newX, piecePosition.y, currentPieceType, newRotate)) {
+            if (!checkCollision(newX, piecePosition.y, currentPieceType[0], newRotate)) {
                 setPiecePosition({ x: newX, y: piecePosition.y });
                 setRotate(newRotate);
             }
         } else {
-            if (!checkCollision(piecePosition.x, piecePosition.y, currentPieceType, newRotate)) {
+            if (!checkCollision(piecePosition.x, piecePosition.y, currentPieceType[0], newRotate)) {
                 setRotate(newRotate);
             }
         }
@@ -84,7 +85,7 @@ export default function Board() {
         const newX = piecePosition.x + dx;
         const newY = piecePosition.y + dy;
     
-        if (!checkCollision(newX, newY, currentPieceType)) {
+        if (!checkCollision(newX, newY, currentPieceType[0])) {
             setPiecePosition({ x: newX, y: newY });
         } else {
             if (dy > 0) { // Collision occurred while moving down
@@ -101,11 +102,18 @@ export default function Board() {
                     setIsGameOver(true);
                 } else {
                     // Continue the game with a new piece
-                    setCurrentPieceType(pieces[Math.floor(Math.random() * pieces.length)]);
+                    updateCurrentPieceType(pieces[Math.floor(Math.random() * pieces.length)]);
                     setPiecePosition({ x: Math.floor(COLUMNS / 2) - 2, y: 0 });
                 }
             }
         }
+    }
+
+    function updateCurrentPieceType(newPiece){
+        setCurrentPieceType(prevArray => {
+            const newArray = [...prevArray.slice(1), newPiece]
+            return newArray
+        })
     }
     
 
@@ -135,9 +143,10 @@ export default function Board() {
     };
 
     function getBoardWithPiece() {
+        console.log(currentPieceType)
         const newBoard = board.map(row => [...row]);
-        const shape = shapes[currentPieceType][rotate];
-        const pieceColor = pieceColours[currentPieceType];
+        const shape = shapes[currentPieceType[0]][rotate];
+        const pieceColor = pieceColours[currentPieceType[0]];
         shape.forEach((row, y) => {
             row.forEach((cell, x) => {
                 if (cell) {
@@ -169,7 +178,7 @@ export default function Board() {
 
     return (
         <div className="flex justify-center items-start h-screen pt-12">
-            <Next/>
+            <Next pieces={currentPieceType} colours={pieceColours}/>
             {isGameOver ? 
             <div className="border-[5px] border-solid rounded-lg mx-24 h-[800px] w-[400px] flex justify-center items-center">
                 <p className="text-[40px] font-semibold text-white">Gamer Over</p>
